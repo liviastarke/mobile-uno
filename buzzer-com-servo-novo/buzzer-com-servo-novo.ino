@@ -149,7 +149,7 @@ const struct Nota twinkle_twinkle[] PROGMEM = {
 
 struct Musica dorme = {
   wiegenlied,
-  NUM_NOTAS(wiegenlied),//não parece funcionar...//sizeof(wiegenlied)/sizeof(wiegenlied[0]),
+  NUM_NOTAS(wiegenlied),//sizeof(wiegenlied)/sizeof(wiegenlied[0]),
   0
 };
 
@@ -172,12 +172,8 @@ void setup() {
    pinMode(SEGMENT_D, OUTPUT);
    pinMode(SEGMENT_E, OUTPUT);
    pinMode(SEGMENT_F, OUTPUT);
-   pinMode(SEGMENT_G, OUTPUT); 
-}
+   pinMode(SEGMENT_G, OUTPUT);
 
-void loop() {
-  // estado desligado
-    set_musica(wiegenlied);
     digitalWrite(SEGMENT_B, LOW);
     digitalWrite(SEGMENT_A, HIGH);
     digitalWrite(SEGMENT_C, LOW);
@@ -185,7 +181,10 @@ void loop() {
     digitalWrite(SEGMENT_E, HIGH);
     digitalWrite(SEGMENT_F, HIGH);
     digitalWrite(SEGMENT_G, HIGH);
+}
 
+void loop() {
+  // estado desligado
     meuServo.attach(SERVO_PIN);
     meuServo.write(angulo);
     
@@ -213,10 +212,16 @@ void rotate(){
 }
 
 void processamento(){
-  while(millis() < tempo_inicio + 30000){
+  while(millis() < tempo_inicio + 50000){
     if(digitalRead(BUTTON_PIN) == LOW){
+      noTone(BUZZER_PIN);
+      delay(1000);
       if(dorme.notas == wiegenlied){
-        set_musica(twinkle_twinkle);
+
+        dorme.notas = twinkle_twinkle;
+        dorme.numerodenotas = NUM_NOTAS(twinkle_twinkle);//sizeof(twinkle_twinkle)/sizeof(twinkle_twinkle[0]);
+        dorme.notai = 0;
+
         digitalWrite(SEGMENT_B, LOW);
         digitalWrite(SEGMENT_A, LOW);
         digitalWrite(SEGMENT_C, HIGH);
@@ -224,9 +229,14 @@ void processamento(){
         digitalWrite(SEGMENT_E, LOW);
         digitalWrite(SEGMENT_F, HIGH);
         digitalWrite(SEGMENT_G, LOW);
+
+        tempo_inicio = millis();
       }
       else{
-        set_musica(wiegenlied);
+        dorme.notas = wiegenlied;
+        dorme.numerodenotas = NUM_NOTAS(wiegenlied);//sizeof(wiegenlied)/sizeof(wiegenlied[0]);
+        dorme.notai = 0;
+
         digitalWrite(SEGMENT_B, LOW);
         digitalWrite(SEGMENT_A, HIGH);
         digitalWrite(SEGMENT_C, LOW);
@@ -236,7 +246,6 @@ void processamento(){
         digitalWrite(SEGMENT_G, HIGH);
         return;
       }
-      delay(1000);
     }
 
     if (millis() >= tempo_proxima_nota){
@@ -258,12 +267,6 @@ void processamento(){
       play_note();
     }
   }
-}
-
-void set_musica(struct Nota song[]){
-    dorme.notas = song;
-    dorme.numerodenotas = sizeof(song)/sizeof(song[0]);
-    dorme.notai = 0;
 }
 
 // toca a próxima nota da música

@@ -1,8 +1,10 @@
 # Projeto de Móbile
 
-Há um problema provavelmente na contagem de notas, ele só está tocando a primeira nota de cada música repetidamente.
+O móbile começa a tocar música quando o botão é pressionado. É possível trocar de música apertando o botão novamente, e apertar o botão pela terceira vez o faz parar de tocar. 
+O móbile também para de tocar após 50 segundos. Se ele parar por tempo, ao ser ligado novamente ele continua a música exatamente de onde parou. Se ele for desligado por botão, 
+ele volta ao começo da primeira música ao ser reiniciado.
 
-Agora ele está trocando de música, mas apertar o botão pela terceira vez não o faz parar de tocar, ele volta para a primeira música.
+Há um problema pendente na rotação.
 
 ## Montagem
 
