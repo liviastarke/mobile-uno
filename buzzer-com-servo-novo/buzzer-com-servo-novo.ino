@@ -1,5 +1,7 @@
 #include <Servo.h>
-//#include <avr/pgmspace.h> // O que exatamente tem aqui? Por que funciona sem essa linha?
+#include <avr/pgmspace.h> // O que exatamente tem aqui? Por que funciona sem essa linha?
+
+#define NUM_NOTAS(song) sizeof(song)/sizeof(song[0])
 
 #define DO 262
 #define RE 294
@@ -91,9 +93,60 @@ const struct Nota wiegenlied[] PROGMEM = {
     {DO,    1},
   };
 
+const struct Nota twinkle_twinkle[] PROGMEM = {
+    // Twin - kle, twin - kle, lit - tle star,
+    {DO,    4},
+    {DO,    4},
+    {SOL,   4},
+    {SOL,   4},
+    {LA,    4},
+    {LA,    4},
+    {SOL,   2},
+    // How I won - der what you are!
+    {FA,    4},
+    {FA,    4},
+    {MI,    4},
+    {MI,    4},
+    {RE,    4},
+    {RE,    4},
+    {DO,    2},
+    // Up a - bove the world so high,
+    {SOL,   4},
+    {SOL,   4},
+    {FA,    4},
+    {FA,    4},
+    {MI,    4},
+    {MI,    4},
+    {RE,    2},
+    // Like a dia - mond in the sky.
+    {SOL,   4},
+    {SOL,   4},
+    {FA,    4},
+    {FA,    4},
+    {MI,    4},
+    {MI,    4},
+    {RE,    2},
+    // Twin - kle, twin - kle, lit - tle star,
+    {DO,    4},
+    {DO,    4},
+    {SOL,   4},
+    {SOL,   4},
+    {LA,    4},
+    {LA,    4},
+    {SOL,   2},
+    // How I won - der what you are!
+    {FA,    4},
+    {FA,    4},
+    {MI,    4},
+    {MI,    4},
+    {RE,    4},
+    {RE,    4},
+    {DO,    2},
+};
+
 struct Musica dorme = {
   wiegenlied,
-  sizeof(wiegenlied)/sizeof(wiegenlied[0]),
+  NUM_NOTAS(wiegenlied),//sizeof(wiegenlied)/sizeof(wiegenlied[0]),
   0
 };
 
@@ -142,7 +195,7 @@ void play(){
         for(int angulo=10; angulo<=170; angulo = angulo + 10){
           meuServo.write(angulo);
           musica();
-          if(digitalRead(BUTTON_PIN) == LOW){
+          if(processamento() == 0){
             delay(100);
             return;
           }
@@ -151,13 +204,32 @@ void play(){
         for(int angulo=170; angulo>=10; angulo = angulo - 10){
           meuServo.write(angulo);
           musica();
-          if(digitalRead(BUTTON_PIN) == LOW){
+          if(processamento() == 0){
             delay(100);
             return;
           }
         }
       }  
       meuServo.detach();
+}
+
+int processamento(){
+  if(digitalRead(BUTTON_PIN) == LOW){
+    if(dorme.notas == wiegenlied){
+      set_musica(twinkle_twinkle);
+    }
+    else{
+      set_musica(wiegenlied);
+      return 0;
+    }
+  }
+  return 1;
+}
+
+void set_musica(struct Nota song[]){
+    dorme.notas = song;
+    dorme.numerodenotas = sizeof(song)/sizeof(song[0]);
+    dorme.notai = 0;
 }
 
 // toca a próxima nota da música
