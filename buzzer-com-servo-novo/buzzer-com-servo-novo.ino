@@ -1,5 +1,5 @@
 #include <Servo.h>
-#include <avr/pgmspace.h> // O que exatamente tem aqui? Por que funciona sem essa linha?
+#include <avr/pgmspace.h>
 
 #define NUM_NOTAS(song) sizeof(song)/sizeof(song[0])
 
@@ -26,9 +26,6 @@
 #define SEGMENT_E 13
 #define SEGMENT_F  8
 #define SEGMENT_G 10
-
-#define FALSE 0
-#define TRUE  1
 
 struct Nota {
   int frequencia;
@@ -97,7 +94,6 @@ const struct Nota wiegenlied[] PROGMEM = {
   };
 
 const struct Nota twinkle_twinkle[] PROGMEM = {
-    // Twin - kle, twin - kle, lit - tle star,
     {DO,    4},
     {DO,    4},
     {SOL,   4},
@@ -105,7 +101,6 @@ const struct Nota twinkle_twinkle[] PROGMEM = {
     {LA,    4},
     {LA,    4},
     {SOL,   2},
-    // How I won - der what you are!
     {FA,    4},
     {FA,    4},
     {MI,    4},
@@ -113,7 +108,6 @@ const struct Nota twinkle_twinkle[] PROGMEM = {
     {RE,    4},
     {RE,    4},
     {DO,    2},
-    // Up a - bove the world so high,
     {SOL,   4},
     {SOL,   4},
     {FA,    4},
@@ -121,7 +115,6 @@ const struct Nota twinkle_twinkle[] PROGMEM = {
     {MI,    4},
     {MI,    4},
     {RE,    2},
-    // Like a dia - mond in the sky.
     {SOL,   4},
     {SOL,   4},
     {FA,    4},
@@ -129,7 +122,6 @@ const struct Nota twinkle_twinkle[] PROGMEM = {
     {MI,    4},
     {MI,    4},
     {RE,    2},
-    // Twin - kle, twin - kle, lit - tle star,
     {DO,    4},
     {DO,    4},
     {SOL,   4},
@@ -137,7 +129,6 @@ const struct Nota twinkle_twinkle[] PROGMEM = {
     {LA,    4},
     {LA,    4},
     {SOL,   2},
-    // How I won - der what you are!
     {FA,    4},
     {FA,    4},
     {MI,    4},
@@ -156,49 +147,49 @@ struct Musica dorme = {
 const int duracao = 2000;
 int blink_state = LOW;
 int angulo = 10;
-int positive_rotation = TRUE;
+int positive_rotation = true;
 unsigned long tempo_inicio;
 unsigned long tempo_proxima_nota;
 Servo meuServo;
 
 
 void setup() {
-   pinMode(BUTTON_PIN,INPUT_PULLUP);
-   pinMode(LED1_PIN, OUTPUT);
-   pinMode(LED2_PIN, OUTPUT);
-   pinMode(SEGMENT_A, OUTPUT);
-   pinMode(SEGMENT_B, OUTPUT);
-   pinMode(SEGMENT_C, OUTPUT);
-   pinMode(SEGMENT_D, OUTPUT);
-   pinMode(SEGMENT_E, OUTPUT);
-   pinMode(SEGMENT_F, OUTPUT);
-   pinMode(SEGMENT_G, OUTPUT);
+  pinMode(BUTTON_PIN,INPUT_PULLUP);
+  pinMode(LED1_PIN, OUTPUT);
+  pinMode(LED2_PIN, OUTPUT);
+  pinMode(SEGMENT_A, OUTPUT);
+  pinMode(SEGMENT_B, OUTPUT);
+  pinMode(SEGMENT_C, OUTPUT);
+  pinMode(SEGMENT_D, OUTPUT);
+  pinMode(SEGMENT_E, OUTPUT);
+  pinMode(SEGMENT_F, OUTPUT);
+  pinMode(SEGMENT_G, OUTPUT);
 
-    digitalWrite(SEGMENT_B, LOW);
-    digitalWrite(SEGMENT_A, HIGH);
-    digitalWrite(SEGMENT_C, LOW);
-    digitalWrite(SEGMENT_D, HIGH);
-    digitalWrite(SEGMENT_E, HIGH);
-    digitalWrite(SEGMENT_F, HIGH);
-    digitalWrite(SEGMENT_G, HIGH);
+  digitalWrite(SEGMENT_B, LOW);
+  digitalWrite(SEGMENT_A, HIGH);
+  digitalWrite(SEGMENT_C, LOW);
+  digitalWrite(SEGMENT_D, HIGH);
+  digitalWrite(SEGMENT_E, HIGH);
+  digitalWrite(SEGMENT_F, HIGH);
+  digitalWrite(SEGMENT_G, HIGH);
 }
 
 void loop() {
   // estado desligado
-    meuServo.attach(SERVO_PIN);
-    meuServo.write(angulo);
-    
-    // não faz nada até que o botão seja pressionado
-    if(digitalRead(BUTTON_PIN) == LOW){
-      delay(1000);
-      tempo_inicio = millis();
-      tempo_proxima_nota = tempo_inicio;
-      processamento();
-    }
-    else{
-      noTone(BUZZER_PIN);
-    }
-    meuServo.detach();
+  meuServo.attach(SERVO_PIN);
+  meuServo.write(angulo);
+  
+  // não faz nada até que o botão seja pressionado
+  if(digitalRead(BUTTON_PIN) == LOW){
+    delay(1000);
+    tempo_inicio = millis();
+    tempo_proxima_nota = tempo_inicio;
+    processamento();
+  }
+  else{
+    noTone(BUZZER_PIN);
+  }
+  meuServo.detach();
 }
 
 void rotate(){
@@ -208,18 +199,28 @@ void rotate(){
   else{
     angulo = angulo - 10;
   }
+  if(angulo < 10 || angulo > 170){
+    positive_rotation = !positive_rotation;
+  }
   meuServo.write(angulo);
 }
 
 void processamento(){
+  // a música dura 50 segundos
   while(millis() < tempo_inicio + 50000){
+
+    // botão pressionado
     if(digitalRead(BUTTON_PIN) == LOW){
+
+      // para a música e dá um tempo para soltar o botão
       noTone(BUZZER_PIN);
       delay(1000);
+
+      // se estava na música 1, mudar para a música 2 e continuar
       if(dorme.notas == wiegenlied){
 
         dorme.notas = twinkle_twinkle;
-        dorme.numerodenotas = NUM_NOTAS(twinkle_twinkle);//sizeof(twinkle_twinkle)/sizeof(twinkle_twinkle[0]);
+        dorme.numerodenotas = NUM_NOTAS(twinkle_twinkle);
         dorme.notai = 0;
 
         digitalWrite(SEGMENT_B, LOW);
@@ -232,9 +233,11 @@ void processamento(){
 
         tempo_inicio = millis();
       }
+
+      // se estava na música 2, mudar para a música 1 e parar de tocar
       else{
         dorme.notas = wiegenlied;
-        dorme.numerodenotas = NUM_NOTAS(wiegenlied);//sizeof(wiegenlied)/sizeof(wiegenlied[0]);
+        dorme.numerodenotas = NUM_NOTAS(wiegenlied);
         dorme.notai = 0;
 
         digitalWrite(SEGMENT_B, LOW);
@@ -244,12 +247,14 @@ void processamento(){
         digitalWrite(SEGMENT_E, HIGH);
         digitalWrite(SEGMENT_F, HIGH);
         digitalWrite(SEGMENT_G, HIGH);
+
         return;
       }
     }
 
+    // apenas após terminar de soar a última nota tocada
     if (millis() >= tempo_proxima_nota){
-      // para de tocar a última nota.
+      // para de tocar a última nota
       noTone(BUZZER_PIN);
 
       // pisca LED
@@ -258,12 +263,9 @@ void processamento(){
       blink_state = !blink_state;
 
       // rotaciona o servo
-      if(angulo <= 10 || angulo >= 170){
-        positive_rotation = !positive_rotation;
-      }
       rotate();
 
-      // toca nota
+      // toca próxima nota
       play_note();
     }
   }

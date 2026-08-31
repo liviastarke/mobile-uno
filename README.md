@@ -4,7 +4,7 @@ O móbile começa a tocar música quando o botão é pressionado. É possível t
 O móbile também para de tocar após 50 segundos. Se ele parar por tempo, ao ser ligado novamente ele continua a música exatamente de onde parou. Se ele for desligado por botão, 
 ele volta ao começo da primeira música ao ser reiniciado.
 
-Há um problema pendente na rotação.
+Enquanto a música toca, dois LEDs piscam e um Servo motor se move em passos de 10 graus no ritmo da música.
 
 ## Montagem
 
@@ -13,7 +13,7 @@ Há um problema pendente na rotação.
 - 2 LEDs
 - 3 resistores 220 Ohms
 - 1 display de sete segmentos anodo comum
-- 1 micro servo 9G
+- 1 Micro Servo 9G
 - 1 push-button
 
 ## Código
