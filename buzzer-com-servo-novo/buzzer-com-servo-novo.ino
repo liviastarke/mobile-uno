@@ -27,6 +27,9 @@
 #define SEGMENT_F  8
 #define SEGMENT_G 10
 
+#define FALSE 0
+#define TRUE  1
+
 struct Nota {
   int frequencia;
   int duracao;
@@ -146,13 +149,16 @@ const struct Nota twinkle_twinkle[] PROGMEM = {
 
 struct Musica dorme = {
   wiegenlied,
-  NUM_NOTAS(wiegenlied),//sizeof(wiegenlied)/sizeof(wiegenlied[0]),
+  NUM_NOTAS(wiegenlied),//não parece funcionar...//sizeof(wiegenlied)/sizeof(wiegenlied[0]),
   0
 };
 
 const int duracao = 2000;
 int blink_state = LOW;
-
+int angulo = 10;
+int positive_rotation = TRUE;
+unsigned long tempo_inicio;
+unsigned long tempo_proxima_nota;
 Servo meuServo;
 
 
@@ -170,60 +176,88 @@ void setup() {
 }
 
 void loop() {
-   digitalWrite(SEGMENT_B, LOW);
-   digitalWrite(SEGMENT_A, HIGH);
-   digitalWrite(SEGMENT_C, LOW);
-   digitalWrite(SEGMENT_D, HIGH);
-   digitalWrite(SEGMENT_E, HIGH);
-   digitalWrite(SEGMENT_F, HIGH);
-   digitalWrite(SEGMENT_G, HIGH);
+  // estado desligado
+    set_musica(wiegenlied);
+    digitalWrite(SEGMENT_B, LOW);
+    digitalWrite(SEGMENT_A, HIGH);
+    digitalWrite(SEGMENT_C, LOW);
+    digitalWrite(SEGMENT_D, HIGH);
+    digitalWrite(SEGMENT_E, HIGH);
+    digitalWrite(SEGMENT_F, HIGH);
+    digitalWrite(SEGMENT_G, HIGH);
 
     meuServo.attach(SERVO_PIN);
-    meuServo.write(10);
+    meuServo.write(angulo);
     
     // não faz nada até que o botão seja pressionado
     if(digitalRead(BUTTON_PIN) == LOW){
-      play();
+      delay(1000);
+      tempo_inicio = millis();
+      tempo_proxima_nota = tempo_inicio;
+      processamento();
     }
     else{
       noTone(BUZZER_PIN);
-    }    
-}
-
-void play(){
-  for(int i=0; i<=2;i++){
-        for(int angulo=10; angulo<=170; angulo = angulo + 10){
-          meuServo.write(angulo);
-          musica();
-          if(processamento() == 0){
-            delay(100);
-            return;
-          }
-        }
-
-        for(int angulo=170; angulo>=10; angulo = angulo - 10){
-          meuServo.write(angulo);
-          musica();
-          if(processamento() == 0){
-            delay(100);
-            return;
-          }
-        }
-      }  
-      meuServo.detach();
-}
-
-int processamento(){
-  if(digitalRead(BUTTON_PIN) == LOW){
-    if(dorme.notas == wiegenlied){
-      set_musica(twinkle_twinkle);
     }
-    else{
-      set_musica(wiegenlied);
-      return 0;
+    meuServo.detach();
+}
+
+void rotate(){
+  if(positive_rotation){
+    angulo = angulo + 10;
+  }
+  else{
+    angulo = angulo - 10;
+  }
+  meuServo.write(angulo);
+}
+
+void processamento(){
+  while(millis() < tempo_inicio + 30000){
+    if(digitalRead(BUTTON_PIN) == LOW){
+      if(dorme.notas == wiegenlied){
+        set_musica(twinkle_twinkle);
+        digitalWrite(SEGMENT_B, LOW);
+        digitalWrite(SEGMENT_A, LOW);
+        digitalWrite(SEGMENT_C, HIGH);
+        digitalWrite(SEGMENT_D, LOW);
+        digitalWrite(SEGMENT_E, LOW);
+        digitalWrite(SEGMENT_F, HIGH);
+        digitalWrite(SEGMENT_G, LOW);
+      }
+      else{
+        set_musica(wiegenlied);
+        digitalWrite(SEGMENT_B, LOW);
+        digitalWrite(SEGMENT_A, HIGH);
+        digitalWrite(SEGMENT_C, LOW);
+        digitalWrite(SEGMENT_D, HIGH);
+        digitalWrite(SEGMENT_E, HIGH);
+        digitalWrite(SEGMENT_F, HIGH);
+        digitalWrite(SEGMENT_G, HIGH);
+        return;
+      }
+      delay(1000);
+    }
+
+    if (millis() >= tempo_proxima_nota){
+      // para de tocar a última nota.
+      noTone(BUZZER_PIN);
+
+      // pisca LED
+      digitalWrite(LED1_PIN, blink_state);
+      digitalWrite(LED2_PIN, !blink_state);
+      blink_state = !blink_state;
+
+      // rotaciona o servo
+      if(angulo <= 10 || angulo >= 170){
+        positive_rotation = !positive_rotation;
+      }
+      rotate();
+
+      // toca nota
+      play_note();
     }
   }
-  return 1;
 }
 
 void set_musica(struct Nota song[]){
@@ -233,7 +267,7 @@ void set_musica(struct Nota song[]){
 }
 
 // toca a próxima nota da música
-void musica(){
+void play_note(){
     if (dorme.notai > dorme.numerodenotas - 1)
         dorme.notai = 0;
     
@@ -241,16 +275,6 @@ void musica(){
     int dur  = pgm_read_word(&(dorme.notas[dorme.notai].duracao));
 
     tone(BUZZER_PIN, freq, duracao/dur);
-    delay(duracao/dur*1.1); // TODO: create non-blocking logic: https://forum.arduino.cc/t/simple-delays-non-blocking-timer-free/635670
-    
-    // tone(BUZZER_PIN, dorme.notas[dorme.notai].frequencia, duracao/dorme.notas[dorme.notai].duracao);
-    // delay(duracao/dorme.notas[dorme.notai].duracao*1.1);
-
-    digitalWrite(LED1_PIN, blink_state);
-    digitalWrite(LED2_PIN, !blink_state);
-    
-    noTone(BUZZER_PIN);
-    
-    dorme.notai++;
-    blink_state = !blink_state;
+    tempo_proxima_nota = millis() + duracao/dur*1.1;
+    dorme.notai = dorme.notai + 1;
 }
