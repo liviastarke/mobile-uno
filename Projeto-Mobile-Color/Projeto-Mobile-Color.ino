@@ -12,20 +12,22 @@
 #define SI 494
 #define DO_2 523
 
-#define BUZZER_PIN 6
-#define SERVO_PIN  9  // servo no pino 9 (só pode ser no 9 ou no 10)
-#define BUTTON_PIN 7
+#define BUZZER_PIN 2
+#define SERVO_PIN  3  // servo no pino 9 (só pode ser no 9 ou no 10)
+#define BUTTON_PIN 4
 
-#define LED1_PIN   1
-#define LED2_PIN   2
+#define LED1_PIN   5  // PWM
+#define LED2_PIN   6  // PWM
 
-#define SEGMENT_A  5
-#define SEGMENT_B  4
-#define SEGMENT_C 11
-#define SEGMENT_D 12
-#define SEGMENT_E 13
-#define SEGMENT_F  8
-#define SEGMENT_G 10
+#define SEGMENT_A  7
+#define SEGMENT_B  8
+#define SEGMENT_C  9
+#define SEGMENT_D 10
+#define SEGMENT_E 11
+#define SEGMENT_F 12
+#define SEGMENT_G 13
+
+#define FADE_AMOUNT 7
 
 struct Nota {
   int frequencia;
@@ -145,7 +147,8 @@ struct Musica dorme = {
 };
 
 const int duracao = 2000;
-int blink_state = LOW;
+int blink_state = 100;
+bool fading_in = false;
 int angulo = 10;
 int positive_rotation = true;
 unsigned long tempo_inicio;
@@ -206,6 +209,8 @@ void rotate(){
 }
 
 void processamento(){
+  unsigned long current_time = millis();
+  unsigned long last_fade = 0;
   // a música dura 50 segundos
   while(millis() < tempo_inicio + 50000){
 
@@ -252,15 +257,21 @@ void processamento(){
       }
     }
 
+    // pisca LED
+    current_time = millis();
+    if (((current_time - last_fade) >= 10) && blink_state >= 5 && blink_state <= 250){
+      pisca_led();
+      last_fade = current_time;
+    }
+
     // apenas após terminar de soar a última nota tocada
-    if (millis() >= tempo_proxima_nota){
+    if (current_time >= tempo_proxima_nota){
       // para de tocar a última nota
       noTone(BUZZER_PIN);
 
-      // pisca LED
-      digitalWrite(LED1_PIN, blink_state);
-      digitalWrite(LED2_PIN, !blink_state);
-      blink_state = !blink_state;
+      // inverte brilho do LED
+      fading_in = !fading_in;
+      pisca_led();
 
       // rotaciona o servo
       rotate();
@@ -269,6 +280,17 @@ void processamento(){
       play_note();
     }
   }
+}
+
+void pisca_led(){
+  if(fading_in){
+    blink_state = blink_state + FADE_AMOUNT;
+  }
+  else{
+    blink_state = blink_state - FADE_AMOUNT;
+  }
+  analogWrite(LED1_PIN, blink_state*blink_state/255);
+  analogWrite(LED2_PIN, (255 - blink_state)*(255 - blink_state)/255);
 }
 
 // toca a próxima nota da música

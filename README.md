@@ -1,5 +1,9 @@
 # Projeto de Móbile
 
+buzzer-com-servo-novo foi a versão inicial do projeto, ao atualizar para Projeto-Mobile-Color foi adicionado um efeito de fade-in/fade-out nos LEDs usando PWM.
+
+## Funcionalidade
+
 O móbile começa a tocar música quando o botão é pressionado. É possível trocar de música apertando o botão novamente, e apertar o botão pela terceira vez o faz parar de tocar. 
 O móbile também para de tocar após 50 segundos. Se ele parar por tempo, ao ser ligado novamente ele continua a música exatamente de onde parou. Se ele for desligado por botão, 
 ele volta ao começo da primeira música ao ser reiniciado.
